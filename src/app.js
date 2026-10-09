@@ -1,6 +1,7 @@
 const express = require('express')
+const connectDB = require('./config/database')
 const { adminAuth, userAuth } = require('./middlewares/auth')
-
+const User = require('./models/user')
 const app = express()
 
 // app.use(
@@ -75,21 +76,84 @@ const app = express()
 //   res.send('User deleted successfully')
 // })
 
-app.get('/getUserData', (req, res) => {
+// app.get('/getUserData', (req, res) => {
+//   try {
+//     throw new Error('I do not like you')
+//     res.send('User data sent')
+//   } catch (err) {
+//     res.status(500).send('Something went wrong, Contact support team')
+//   }
+// })
+
+// app.use('/', (err, req, res, next) => {
+//   if (err) {
+//     res.status(500).send('Something went wrong')
+//   }
+// })
+
+app.use(express.json())
+
+app.post('/signup', async (req, res) => {
+  const user = new User(req.body)
   try {
-    throw new Error('I do not like you')
-    res.send('User data sent')
+    await user.save()
+    res.send('User added successfully')
   } catch (err) {
-    res.status(500).send('Something went wrong, Contact support team')
+    res.status(400).send('Error saving user to database: ' + err.message)
   }
 })
 
-app.use('/', (err, req, res, next) => {
-  if (err) {
+app.get('/user', async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email })
+    if (!user) {
+      res.status(404).send('User not found!')
+    } else {
+      res.send(user)
+    }
+  } catch (err) {
     res.status(500).send('Something went wrong')
   }
 })
 
-app.listen(7777, () => {
-  console.log('Server is successfully listening on port 7777.....')
+app.get('/feed', async (req, res) => {
+  try {
+    const users = await User.find({})
+    if (!users.length) {
+      res.status(404).send('User not found!')
+    } else {
+      res.send(users)
+    }
+  } catch (err) {
+    res.status(500).send('Something went wrong')
+  }
 })
+
+app.delete('/user', async (req, res) => {
+  try {
+    const deleteUser = await User.findByIdAndDelete(req.body.id)
+    res.send('User Successfully deleted')
+  } catch (err) {
+    res.status(500).send('')
+  }
+})
+
+app.patch('/user', async (req, res) => {
+  try {
+    await User.findOneAndUpdate({ email: req.body.email }, req.body, {returnDocument: 'after', runValidators: true})
+    res.send('User updated successfully')
+  } catch (err) {
+    res.status(500).send('Something went wrong ' + err.message)
+  }
+})
+
+connectDB()
+  .then(() => {
+    console.log('Database connection estabhlished....')
+    app.listen(7777, () => {
+      console.log('Server is successfully listening on port 7777.....')
+    })
+  })
+  .catch((err) => {
+    console.err('Database can not be connected!!')
+  })
