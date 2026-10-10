@@ -138,9 +138,27 @@ app.delete('/user', async (req, res) => {
   }
 })
 
-app.patch('/user', async (req, res) => {
+app.patch('/user/:userId', async (req, res) => {
   try {
-    await User.findOneAndUpdate({ email: req.body.email }, req.body, {returnDocument: 'after', runValidators: true})
+    const data = req.body
+    const ALLOWED_FIELDS = [
+      'skills',
+      'gender',
+      'age',
+      'photoUrl',
+      'about',
+      'password',
+    ]
+    if (Object.keys(data).every((k) => !ALLOWED_FIELDS.includes(k))) {
+      throw new Error('These fields can not be changed')
+    }
+    if (data.skills?.length > 10) {
+      throw new Error('Skills can not be more than 10')
+    }
+    await User.findByIdAndUpdate(req.params.userId, data, {
+      returnDocument: 'after',
+      runValidators: true,
+    })
     res.send('User updated successfully')
   } catch (err) {
     res.status(500).send('Something went wrong ' + err.message)
