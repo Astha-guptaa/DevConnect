@@ -1,8 +1,10 @@
 const express = require('express')
 const connectDB = require('./config/database')
 const { adminAuth, userAuth } = require('./middlewares/auth')
+const { validateSignUpData } = require('./utils/validate')
 const User = require('./models/user')
 const app = express()
+const bcrypt = require('bcrypt')
 
 // app.use(
 //   '/user',
@@ -94,12 +96,42 @@ const app = express()
 app.use(express.json())
 
 app.post('/signup', async (req, res) => {
-  const user = new User(req.body)
   try {
+    // validate the data
+    validateSignUpData(req)
+
+    const { firstName, lastName, email, password } = req.body
+
+    // encrypt the password
+    const passwordHash = await bcrypt.hash(password, 10)
+
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      password: passwordHash,
+    })
     await user.save()
     res.send('User added successfully')
   } catch (err) {
-    res.status(400).send('Error saving user to database: ' + err.message)
+    res.status(400).send('Error : ' + err.message)
+  }
+})
+
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body
+    const user = await User.findOne({ email })
+    if (!user) {
+      throw new Error('Invalid Credentials')
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+    if (!isPasswordValid) {
+      throw new Error('Invalid Credentials')
+    } 
+    res.send('Login Successful!!!')
+  } catch (err) {
+    res.status(400).send('Error : ' + err.message)
   }
 })
 
@@ -140,7 +172,6 @@ app.delete('/user', async (req, res) => {
 
 app.patch('/user/:userId', async (req, res) => {
   try {
-    const data = req.body
     const ALLOWED_FIELDS = [
       'skills',
       'gender',
@@ -152,10 +183,7 @@ app.patch('/user/:userId', async (req, res) => {
     if (Object.keys(data).every((k) => !ALLOWED_FIELDS.includes(k))) {
       throw new Error('These fields can not be changed')
     }
-    if (data.skills?.length > 10) {
-      throw new Error('Skills can not be more than 10')
-    }
-    await User.findByIdAndUpdate(req.params.userId, data, {
+    await User.findByIdAndUpdate(req.params.userId, req.body, {
       returnDocument: 'after',
       runValidators: true,
     })
