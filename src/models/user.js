@@ -1,5 +1,7 @@
 const mongoose = require('mongoose')
-const validator = require("validator")
+const validator = require('validator')
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
 
 const userSchema = new mongoose.Schema(
   {
@@ -21,19 +23,19 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       validate(value) {
-        if(!validator.isEmail(value)) {
-            throw new Error("Email addess is not valid " + value)
+        if (!validator.isEmail(value)) {
+          throw new Error('Email addess is not valid ' + value)
         }
-      }
+      },
     },
     password: {
       type: String,
       required: true,
       validate(value) {
-        if(!validator.isStrongPassword(value)) {
-            throw new Error("Enter Strong Password: " + value)
+        if (!validator.isStrongPassword(value)) {
+          throw new Error('Enter Strong Password: ' + value)
         }
-      }
+      },
     },
     age: {
       type: Number,
@@ -51,7 +53,7 @@ const userSchema = new mongoose.Schema(
     about: {
       type: String,
       default: 'This is default about you, Change it later',
-      maxLength: 200
+      maxLength: 200,
     },
     skills: {
       type: [String],
@@ -59,21 +61,41 @@ const userSchema = new mongoose.Schema(
         if (value.length > 10) {
           throw new Error('Skills can not be more than 10')
         }
-      }
+      },
     },
     photoUrl: {
       type: String,
       default: 'https://www.magnific.com/free-photos-vectors/dummy-person',
       validate(value) {
-        if(!validator.isURL(value)) {
-            throw new Error("Photo should be in URL format")
+        if (!validator.isURL(value)) {
+          throw new Error('Photo should be in URL format')
         }
-      }
+      },
     },
   },
   {
     timestamps: true,
   },
 )
+
+// always use function instead of arrow fn, bcz arrow fn dont have their own this.
+userSchema.methods.getJWT = async function () {
+  const user = this
+  const token = await jwt.sign({ _id: user._id }, 'Dev@Connect$6954', {
+    expiresIn: '7d',
+  })
+  return token
+}
+
+userSchema.methods.validatePassword = async function (passwordEnteredByUser) {
+  const user = this
+  const passwordHash = user.password
+  // first argument should be password entered by user, second one will be hash one;
+  const isPasswordValid = await bcrypt.compare(
+    passwordEnteredByUser,
+    passwordHash,
+  )
+  return isPasswordValid
+}
 
 module.exports = mongoose.model('User', userSchema)
