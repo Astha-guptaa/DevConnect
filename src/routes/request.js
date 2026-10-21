@@ -12,8 +12,7 @@ requestRouter.post(
   async (req, res) => {
     try {
       const fromUserId = req.user._id
-      const toUserId = req.params.toUserId
-      const status = req.params.status
+      const { status, toUserId } = req.params
 
       const allowedStatus = ['interested', 'ignored']
       if (!allowedStatus.includes(status)) {
@@ -35,18 +34,55 @@ requestRouter.post(
         throw new Error('Connection Request Already Exists')
       }
 
-      const connectionRequestData = new ConnectionRequest({
+      const connectionRequest = new ConnectionRequest({
         fromUserId,
         toUserId,
         status,
       })
-      await connectionRequestData.save()
+      const data = await connectionRequest.save()
       res.json({
-        message: req.user.firstName + ' is/has ' + status + " (in) " + toUser.firstName,
-        connectionRequestData,
+        message:
+          req.user.firstName +
+          ' is/has ' +
+          status +
+          ' (in) ' +
+          toUser.firstName,
+        data,
       })
     } catch (err) {
       res.status(400).json({ message: 'ERROR : ' + err.message })
+    }
+  },
+)
+
+requestRouter.post(
+  '/request/review/:status/:requestId',
+  userAuth,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user
+      const { status, requestId } = req.params
+
+      const allowedStatus = ['accepted', 'rejected']
+      if (!allowedStatus.includes(status)) {
+        throw new Error(status + ' status type is not supported')
+      }
+
+      const connectionRequest = await ConnectionRequest.findOne({
+        _id: requestId,
+        toUserId: loggedInUser._id,
+        status: 'interested',
+      })
+      if (!connectionRequest) {
+        throw new Error('No Connection Found')
+      }
+
+      connectionRequest.status = status
+
+      const data = await connectionRequest.save()
+      res.json({ message: 'Connection ' + status, data })
+    } catch (err) {
+      res.status(400).json({ message: 'Error : ' + err.message })
     }
   },
 )
