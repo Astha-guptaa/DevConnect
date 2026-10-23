@@ -4,8 +4,6 @@ const { validateProfileEditData } = require('../utils/validate')
 const bcrypt = require('bcrypt')
 const profileRouter = express.Router()
 
-profileRouter.use(express.json())
-
 profileRouter.get('/profile/view', userAuth, async (req, res) => {
   try {
     const user = req.user

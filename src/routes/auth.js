@@ -2,11 +2,7 @@ const express = require('express')
 const bcrypt = require('bcrypt')
 const User = require('../models/user')
 const { validateSignUpData } = require('../utils/validate')
-const cookieParser = require('cookie-parser')
 const authRouter = express.Router()
-
-authRouter.use(express.json())
-authRouter.use(cookieParser())
 
 authRouter.post('/signup', async (req, res) => {
   try {
