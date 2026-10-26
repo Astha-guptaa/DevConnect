@@ -16,7 +16,7 @@ userRouter.get('/user/requests/received', userAuth, async (req, res) => {
       // }).populate("fromUserId", ["firstName", "lastName"]) both below and this one works same way
     }).populate('fromUserId', USER_SAFE_DATA)
     if (!connectionRequests.length) {
-      res.json({ message: 'You have no requests yet' })
+      return res.json({ message: 'You have no requests yet' })
     }
 
     res.json({
@@ -80,7 +80,7 @@ userRouter.get('/user/feed', userAuth, async (req, res) => {
       ],
     }).select(USER_SAFE_DATA)
 
-    res.json(users)
+    res.json({data : users})
   } catch (err) {
     res.status(400).json({ message: 'ERROR : ' + err.message })
   }
