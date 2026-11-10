@@ -24,11 +24,11 @@ app.use('/', userRouter)
 
 connectDB()
   .then(() => {
-    console.log('Database connection estabhlished....')
+    console.log('Database connection established....')
     app.listen(7777, () => {
       console.log('Server is successfully listening on port 7777.....')
     })
   })
   .catch((err) => {
-    console.err('Database can not be connected!!')
+    console.log('Database can not be connected!!')
   })
