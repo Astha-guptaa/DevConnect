@@ -7,6 +7,7 @@ const requestRouter = require('./routes/request')
 const userRouter = require('./routes/user')
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
+require('dotenv').config()
 
 app.use(
   cors({
@@ -25,8 +26,8 @@ app.use('/', userRouter)
 connectDB()
   .then(() => {
     console.log('Database connection established....')
-    app.listen(7777, () => {
-      console.log('Server is successfully listening on port 7777.....')
+    app.listen(process.env.PORT, () => {
+      console.log('Server is successfully listening on port ' + process.env.PORT + '.....')
     })
   })
   .catch((err) => {

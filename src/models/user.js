@@ -85,7 +85,7 @@ const userSchema = new mongoose.Schema(
 // always use function instead of arrow fn, bcz arrow fn dont have their own this.
 userSchema.methods.getJWT = async function () {
   const user = this
-  const token = await jwt.sign({ _id: user._id }, 'Dev@Connect$6954', {
+  const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
     expiresIn: '7d',
   })
   return token
