@@ -25,6 +25,8 @@ GET - /user/connections
 GET - /user/requests/received
 GET - /user/feed
 
+These routes are also available with the /api prefix.
+
 ## chatRouter
 
 GET - /chat/:targetUserId
