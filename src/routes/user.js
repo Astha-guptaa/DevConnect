@@ -10,11 +10,12 @@ userRouter.get('/user/requests/received', userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user
 
-    const connectionRequests = await ConnectionRequest.find({
-      toUserId: loggedInUser._id,
-      status: 'interested',
-      // }).populate("fromUserId", ["firstName", "lastName"]) both below and this one works same way
-    }).populate('fromUserId', USER_SAFE_DATA)
+    const connectionRequests = (
+      await ConnectionRequest.find({
+        toUserId: loggedInUser._id,
+        status: 'interested',
+      }).populate('fromUserId', USER_SAFE_DATA)
+    ).filter((request) => request.fromUserId)
     if (!connectionRequests.length) {
       return res.json({ message: 'You have no requests yet' })
     }
@@ -42,7 +43,10 @@ userRouter.get('/user/connections', userAuth, async (req, res) => {
 
     const data = connectionRequests
       .filter(
-        (row) => !row.fromUserId._id.equals(row.toUserId._id),
+        (row) =>
+          row.fromUserId &&
+          row.toUserId &&
+          !row.fromUserId._id.equals(row.toUserId._id),
       )
       .map((row) => {
         if (row.fromUserId._id.equals(loggedInUser._id)) {
