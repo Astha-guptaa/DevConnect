@@ -24,6 +24,9 @@ const isUserInRoom = (io, roomId, userId, excludedSocketId) => {
 
 const initializeSocket = (server) => {
   const io = socket(server, {
+    path:
+      process.env.SOCKET_IO_PATH ||
+      (process.env.NODE_ENV === 'production' ? '/api/socket.io' : '/socket.io'),
     cors: {
       origin: 'http://localhost:5173',
     },

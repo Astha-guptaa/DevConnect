@@ -25,3 +25,11 @@ GET - /user/connections
 GET - /user/requests/received
 GET - /user/feed
 
+## chatRouter
+
+GET - /chat/:targetUserId
+
+Also available as /api/chat/:targetUserId
+
+Socket.IO path: /socket.io locally, /api/socket.io in production
+
